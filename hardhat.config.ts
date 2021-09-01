@@ -1,3 +1,10 @@
+import { config as dotenvConfig } from "dotenv";
+import { resolve } from "path";
+dotenvConfig({ path: resolve(__dirname, "./.env") });
+
+import { HardhatUserConfig } from "hardhat/config";
+import { NetworkUserConfig } from "hardhat/types";
+
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
@@ -6,14 +13,6 @@ import "solidity-coverage";
 import "./tasks/accounts";
 import "./tasks/clean";
 import "./tasks/deployers";
-
-import { resolve } from "path";
-
-import { config as dotenvConfig } from "dotenv";
-import { HardhatUserConfig } from "hardhat/config";
-import { NetworkUserConfig } from "hardhat/types";
-
-dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 const chainIds = {
   ganache: 1337,

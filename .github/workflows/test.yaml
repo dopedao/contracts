@@ -1,0 +1,28 @@
+name: test
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "14.x"
+      - uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+      - run: yarn
+      - run: yarn typechain
+        env:
+          INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
+          MNEMONIC: ${{ secrets.MNEMONIC }}
+      - run: yarn test
+        env:
+          INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
+          MNEMONIC: ${{ secrets.MNEMONIC }}
