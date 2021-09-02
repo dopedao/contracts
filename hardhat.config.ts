@@ -4,7 +4,7 @@ dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 import { HardhatUserConfig } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
-
+import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
@@ -97,6 +97,9 @@ const config: HardhatUserConfig = {
   typechain: {
     outDir: "typechain",
     target: "ethers-v5",
+  },
+  etherscan: {
+    apiKey: "RWNVM4YY577I58CZHRDUSKZJ4CVW3S31YM",
   },
 };
 

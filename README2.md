@@ -1,3 +1,5 @@
 Deployment task:
 
-npx hardhat deploy:NFTStake --nft 0x7F96F68Fa766D4E9b037417FE4967511152B9272 --erc20 0x8872332b988152D485028dDB68E7Da98962958cd --dao 0x580937198842E2b8d3702501219ef2eB1aA12235 --reward 520833333333333 --network mainnet
+Deploy for DOPE
+
+npx hardhat deploy:NFTStake --nft 0x8707276df042e89669d69a177d3da7dc78bd8723 --erc20 0x8390756AbF18f752744Eef2AF8eE745bD499b23b --dao 0xB20adB7Aa32361Dadfdeb87Dd6A072e7B75A7b59 --reward <<<<<>>>> --network mainnet

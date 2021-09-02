@@ -74,6 +74,7 @@
     "typechain": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat typechain"
   },
   "dependencies": {
+    "@nomiclabs/hardhat-etherscan": "^2.1.6",
     "@openzeppelin/contracts": ">=4.3.1"
   }
 }
