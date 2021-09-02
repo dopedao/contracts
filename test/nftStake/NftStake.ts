@@ -26,7 +26,7 @@ describe("Unit tests", function () {
 
   describe("NFTStake", function () {
     beforeEach(async function () {
-      this.tokensPerBlock = 2;
+      this.emission = 2;
 
       // deploy erc20
       const erc20Artifact: Artifact = await hre.artifacts.readArtifact("MockERC20");
@@ -43,7 +43,7 @@ describe("Unit tests", function () {
           this.mockERC721.address,
           this.mockERC20.address,
           await this.signers.dao.getAddress(),
-          this.tokensPerBlock,
+          this.emission,
         ])
       );
 

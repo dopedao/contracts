@@ -7,7 +7,7 @@ declare module "mocha" {
     nftStake: NftStake;
     mockERC20: MockERC20;
     mockERC721: MockERC721;
-    tokensPerBlock: number;
+    emission: number;
     loadFixture: <T>(fixture: Fixture<T>) => Promise<T>;
     signers: Signers;
   }
