@@ -3,46 +3,42 @@ import { BigNumber, utils } from "ethers";
 import { network } from "hardhat";
 
 export function shouldBehaveLikeNftStake(): void {
-  it("should tell you a number", async function () {
-    const value = utils.formatEther(BigNumber.from(1));
-    // const value2 = utils.formatUnits(BigNumber.from(1), "wei")
-    const divisor = (24 * 60 * 60) / 15;
-    const value2 = utils.parseEther("3").div(BigNumber.from(divisor)).toString();
-    console.log(value2);
-  });
   it("should let user stake NFT", async function () {
     // Need to approve the token first
-    await expect(this.nftStake.connect(this.signers.user1).stake([BigNumber.from(1)])).to.be.revertedWith(
+    await expect(this.nftStake.connect(this.signers.user1).stake([BigNumber.from(1)], true)).to.be.revertedWith(
       "ERC721: transfer caller is not owner nor approved",
     );
     // Approve nftStake to take the token
     await this.mockERC721.connect(this.signers.user1).approve(this.nftStake.address, BigNumber.from(1));
     // Try to stake it
-    await expect(this.nftStake.connect(this.signers.user1).stake([BigNumber.from(1)])).to.not.be.reverted;
+    await expect(this.nftStake.connect(this.signers.user1).stake([BigNumber.from(1)], true)).to.not.be.reverted;
   });
 
   it("should not let a user stake twice", async function () {
     // Approve nftStake to take the token
     await this.mockERC721.connect(this.signers.user1).approve(this.nftStake.address, BigNumber.from(1));
     // Try to stake it
-    await expect(this.nftStake.connect(this.signers.user1).stake([BigNumber.from(1)])).to.not.be.reverted;
+    await expect(this.nftStake.connect(this.signers.user1).stake([BigNumber.from(1)], true)).to.not.be.reverted;
     // Try to stake again
-    await expect(this.nftStake.connect(this.signers.user1).stake([BigNumber.from(1)])).to.be.revertedWith(
+    await expect(this.nftStake.connect(this.signers.user1).stake([BigNumber.from(1)], true)).to.be.revertedWith(
       "ERC721: transfer of token that is not own",
     );
   });
 
   it("should not let you stake a token you don't own", async function () {
     // Try to stake it
-    await expect(this.nftStake.connect(this.signers.user2).stake([BigNumber.from(1)])).to.be.reverted;
+    await expect(this.nftStake.connect(this.signers.user2).stake([BigNumber.from(1)], true)).to.be.reverted;
   });
 
   it("should let user unstake", async function () {
     const tokenId = BigNumber.from(1);
     // Approve nftStake to take the token
     await this.mockERC721.connect(this.signers.user1).approve(this.nftStake.address, tokenId);
+    
+    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], false)).to.be.revertedWith("nftstake: must accept terms of service");
+    
     // Try to stake it
-    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId])).to.not.be.reverted;
+    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], true)).to.not.be.reverted;
 
     // confirm nftStake owns token
     expect(await this.mockERC721.connect(this.signers.admin).ownerOf(tokenId)).to.eql(this.nftStake.address);
@@ -66,8 +62,10 @@ export function shouldBehaveLikeNftStake(): void {
       estimatedPayout,
     );
 
+    await expect(this.nftStake.connect(this.signers.user1).unstake([tokenId], false)).to.be.revertedWith("nftstake: must accept terms of service");
+
     // try to unstake
-    await expect(this.nftStake.connect(this.signers.user1).unstake([tokenId])).to.not.be.reverted;
+    await expect(this.nftStake.connect(this.signers.user1).unstake([tokenId], true)).to.not.be.reverted;
 
     // confirm user1 owns the token again
     expect(await this.mockERC721.connect(this.signers.user1).ownerOf(tokenId)).to.eql(
@@ -87,13 +85,13 @@ export function shouldBehaveLikeNftStake(): void {
     expect((await this.nftStake.connect(this.signers.user1).rewardOf(tokenId)).toNumber()).to.eql(0);
   });
 
-  it("getCurrentStake should return correct stake amount currently", async function () {
+  it("rewardOf should return correct stake amount currently", async function () {
     const tokenId = BigNumber.from(1);
 
     // Approve nftStake to take the token
     await this.mockERC721.connect(this.signers.user1).approve(this.nftStake.address, tokenId);
     // Try to stake it
-    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId])).to.not.be.reverted;
+    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], true)).to.not.be.reverted;
 
     // Wait 4 blocks
     await network.provider.send("evm_mine");
@@ -111,7 +109,7 @@ export function shouldBehaveLikeNftStake(): void {
     // Approve nftStake to take the token
     await this.mockERC721.connect(this.signers.user1).approve(this.nftStake.address, tokenId);
     // Try to stake it
-    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId])).to.not.be.reverted;
+    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], true)).to.not.be.reverted;
 
     // Wait 4 blocks
     await network.provider.send("evm_mine");
@@ -144,12 +142,16 @@ export function shouldBehaveLikeNftStake(): void {
     expect(balanceBeforeHarvest).to.eq(0);
 
     // should not let you harvest tokens you did not stake
-    await expect(this.nftStake.connect(this.signers.user2).harvest([tokenId])).to.be.revertedWith(
+    await expect(this.nftStake.connect(this.signers.user2).harvest([tokenId], true)).to.be.revertedWith(
       "nftstake: not owner",
     );
 
+    await expect(this.nftStake.connect(this.signers.user2).harvest([tokenId], false)).to.be.revertedWith(
+      "nftstake: must accept terms of service",
+    );
+
     // harvest Stake
-    await this.nftStake.connect(this.signers.user1).harvest([tokenId]);
+    await this.nftStake.connect(this.signers.user1).harvest([tokenId], true);
 
     // should have harvested the tokens
     expect(
@@ -179,7 +181,4 @@ export function shouldBehaveLikeNftStake(): void {
       1 * this.emission,
     );
   });
-
-  xit("only allows DAO to update tokens per block");
-  xit("can not do reentrancy");
 }

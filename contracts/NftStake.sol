@@ -13,6 +13,9 @@ contract NftStake is IERC721Receiver, ReentrancyGuard {
     IERC721 public nftToken;
     IERC20 public erc20Token;
 
+    string public constant TERMS_OF_SERVICE =
+        'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.';
+
     address public admin;
     uint256 public emissionRate;
 
@@ -47,6 +50,11 @@ contract NftStake is IERC721Receiver, ReentrancyGuard {
         _;
     }
 
+    modifier acceptedTermsOfService(bool accepted) {
+        require(accepted, "nftstake: must accept terms of service");
+        _;
+    }
+
     constructor(
         IERC721 _nftToken,
         IERC20 _erc20Token,
@@ -62,27 +70,41 @@ contract NftStake is IERC721Receiver, ReentrancyGuard {
     }
 
     // User must give this contract permission to take ownership of it.
-    function stake(uint256[] calldata ids) public nonReentrant returns (bool) {
+    function stake(uint256[] calldata ids, bool iAcceptTermOfService)
+        public
+        nonReentrant
+        acceptedTermsOfService(iAcceptTermOfService)
+        returns (bool)
+    {
         for (uint256 i = 0; i < ids.length; i++) {
             _stake(ids[i]);
         }
         return true;
     }
 
-    function unstake(uint256[] calldata ids) public nonReentrant returns (bool) {
+    function unstake(uint256[] calldata ids, bool iAcceptTermOfService)
+        public
+        nonReentrant
+        acceptedTermsOfService(iAcceptTermOfService)
+        returns (bool)
+    {
         for (uint256 i = 0; i < ids.length; i++) {
             _unstake(ids[i]);
         }
         return true;
     }
 
-    function harvest(uint256[] calldata ids) public nonReentrant {
+    function harvest(uint256[] calldata ids, bool iAcceptTermOfService)
+        public
+        nonReentrant
+        acceptedTermsOfService(iAcceptTermOfService)
+    {
         for (uint256 i = 0; i < ids.length; i++) {
             _harvest(ids[i]);
         }
     }
 
-    function sweep() external onlyAdmin {
+    function sweep() external {
         erc20Token.transfer(admin, erc20Token.balanceOf(address(this)));
     }
 
