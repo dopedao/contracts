@@ -34,9 +34,9 @@ export function shouldBehaveLikeNftStake(): void {
     const tokenId = BigNumber.from(1);
     // Approve nftStake to take the token
     await this.mockERC721.connect(this.signers.user1).approve(this.nftStake.address, tokenId);
-    
+
     await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], false)).to.be.revertedWith("nftstake: must accept terms of service");
-    
+
     // Try to stake it
     await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], true)).to.not.be.reverted;
 
@@ -78,6 +78,40 @@ export function shouldBehaveLikeNftStake(): void {
         await this.mockERC20.connect(this.signers.user1).balanceOf(await this.signers.user1.getAddress())
       ).toNumber(),
     ).to.eql(estimatedPayout);
+  });
+
+  it("should let user unstake in same block", async function () {
+    const tokenId = BigNumber.from(1);
+    // Approve nftStake to take the token
+    await this.mockERC721.connect(this.signers.user1).approve(this.nftStake.address, tokenId);
+
+    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], false)).to.be.revertedWith("nftstake: must accept terms of service");
+
+    // Try to stake it
+    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], true)).to.not.be.reverted;
+
+    // confirm nftStake owns token
+    expect(await this.mockERC721.connect(this.signers.admin).ownerOf(tokenId)).to.eql(this.nftStake.address);
+
+    // check if estimated stake matches contract
+    expect(await (await this.nftStake.connect(this.signers.user1).rewardOf(tokenId)).toNumber()).to.eql(
+      0,
+    );
+
+    // try to unstake
+    await expect(this.nftStake.connect(this.signers.user1).unstake([tokenId], true)).to.not.be.reverted;
+
+    // confirm user1 owns the token again
+    expect(await this.mockERC721.connect(this.signers.user1).ownerOf(tokenId)).to.eql(
+      await this.signers.user1.getAddress(),
+    );
+
+    // check if user1 has been paid the estimated stake
+    expect(
+      await (
+        await this.mockERC20.connect(this.signers.user1).balanceOf(await this.signers.user1.getAddress())
+      ).toNumber(),
+    ).to.eql(0);
   });
 
   it("rewardOf should return zero when not staked", async function () {
