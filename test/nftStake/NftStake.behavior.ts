@@ -215,4 +215,33 @@ export function shouldBehaveLikeNftStake(): void {
       1 * this.emission,
     );
   });
+
+  it("should allow user to unstake if reward gt balance", async function () {
+    const tokenId = BigNumber.from(1);
+    // Approve nftStake to take the token
+    await this.mockERC721.connect(this.signers.user1).approve(this.nftStake.address, tokenId);
+
+    await this.nftStake.connect(this.signers.dao).setEmissionRate(10000)
+
+    // Try to stake it
+    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], true)).to.not.be.reverted;
+
+    await network.provider.send("evm_mine");
+    await network.provider.send("evm_mine");
+
+    // try to unstake
+    await expect(this.nftStake.connect(this.signers.user1).unstake([tokenId], true)).to.not.be.reverted;
+
+    // confirm user1 owns the token again
+    expect(await this.mockERC721.connect(this.signers.user1).ownerOf(tokenId)).to.eql(
+      await this.signers.user1.getAddress(),
+    );
+
+    // check if user1 has been paid the estimated stake
+    expect(
+      await (
+        await this.mockERC20.connect(this.signers.user1).balanceOf(await this.signers.user1.getAddress())
+      ).toNumber(),
+    ).to.eql(0);
+  });
 }
