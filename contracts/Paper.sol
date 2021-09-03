@@ -144,7 +144,7 @@ contract Paper is ERC20, ERC20Snapshot, Ownable {
 
         // Effects
 
-        // Mark that Paper has been claimed for this season for the
+        // Mark that Paper has been claimed for the
         // given tokenId
         claimedByTokenId[tokenId] = true;
 
