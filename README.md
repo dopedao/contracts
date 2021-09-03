@@ -13,6 +13,18 @@ Then, proceed with installing dependencies:
 yarn install
 ```
 
+### Setup env
+
+```sh
+touch .env
+```
+
+add to env:
+```
+MNEMONIC=[12 words]
+INFURA_API_KEY=[a key you get for free]
+```
+
 ### Compile
 
 Compile the smart contracts with Hardhat:
