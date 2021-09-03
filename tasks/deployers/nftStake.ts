@@ -7,7 +7,7 @@ task("deploy:NFTStake")
   .addParam("nft", "The NFT Contract Address")
   .addParam("erc20", "The payout ERC20 Token")
   .addParam("dao", "The DAO which governs the contract")
-  .addParam("reward", "ERC20 tokens rewarded per block")
+  .addParam("reward", "ERC20 tokens rewarded per block per account")
   .setAction(async function (taskArguments: TaskArguments, { ethers }) {
     const nftStakeFactory: NftStake__factory = await ethers.getContractFactory("NftStake");
     const nftStake: NftStake = <NftStake>(
