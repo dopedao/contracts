@@ -8,8 +8,7 @@ import "@openzeppelin/contracts@4.3.0/access/Ownable.sol";
 
 contract Paper is ERC20, ERC20Snapshot, Ownable {
     // Dope Wars Loot contract is available at https://etherscan.io/address/0x8707276DF042E89669d69A177d3DA7dC78bd8723
-    address public dopeWarsLootContractAddress = 0x8707276DF042E89669d69A177d3DA7dC78bd8723;
-    IERC721Enumerable public dopeWarsLootContract;
+    IERC721Enumerable public dopeWarsLootContract = IERC721Enumerable(0x8707276DF042E89669d69A177d3DA7dC78bd8723);
 
     // 8000 tokens number 1-8000
     uint256 public tokenIdStart = 1;
