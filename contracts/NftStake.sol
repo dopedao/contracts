@@ -104,7 +104,7 @@ contract NftStake is IERC721Receiver, ReentrancyGuard {
         }
     }
 
-    function sweep() external {
+    function sweep() external onlyAdmin {
         erc20Token.transfer(admin, erc20Token.balanceOf(address(this)));
     }
 
