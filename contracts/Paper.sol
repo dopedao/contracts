@@ -12,7 +12,7 @@ contract Paper is ERC20, ERC20Permit, ERC20Votes, ERC20Snapshot, Ownable {
     // Dope Wars Loot: https://etherscan.io/address/0x8707276DF042E89669d69A177d3DA7dC78bd8723
     IERC721Enumerable public loot = IERC721Enumerable(0x8707276DF042E89669d69A177d3DA7dC78bd8723);
     // DopeDAO timelock: https://etherscan.io/address/0xb57ab8767cae33be61ff15167134861865f7d22c
-    address public daoAddress = 0xB57Ab8767CAe33bE61fF15167134861865F7D22C;
+    address public timelock = 0xB57Ab8767CAe33bE61fF15167134861865F7D22C;
 
     // 8000 tokens number 1-8000
     uint256 public tokenIdStart = 1;
@@ -25,7 +25,7 @@ contract Paper is ERC20, ERC20Permit, ERC20Votes, ERC20Snapshot, Ownable {
     mapping(uint256 => bool) public claimedByTokenId;
 
     constructor() ERC20("Paper", "PAPER") ERC20Permit("PAPER") {
-        transferOwnership(daoAddress);
+        transferOwnership(timelock);
     }
 
     function snapshot() public onlyOwner {
@@ -69,8 +69,7 @@ contract Paper is ERC20, ERC20Permit, ERC20Votes, ERC20Snapshot, Ownable {
     /// @notice Claim Paper for all tokens owned by the sender within a
     /// given range
     /// @notice This function is useful if you own too much DWL to claim all at
-    /// once or if you want to leave some Paper unclaimed. If you leave Paper
-    /// unclaimed, however, you cannot claim it once the next season starts.
+    /// once or if you want to leave some Paper unclaimed.
     function claimRangeForOwner(uint256 ownerIndexStart, uint256 ownerIndexEnd) external {
         uint256 tokenBalanceOwner = loot.balanceOf(_msgSender());
 
@@ -96,8 +95,7 @@ contract Paper is ERC20, ERC20Permit, ERC20Votes, ERC20Snapshot, Ownable {
         // We use >= and <= to here because all of the token IDs are 0-indexed
         require(tokenId >= tokenIdStart && tokenId <= tokenIdEnd, "TOKEN_ID_OUT_OF_RANGE");
 
-        // Check that Paper have not already been claimed this season
-        // for a given tokenId
+        // Check that Paper have not already been claimed for a given tokenId
         require(!claimedByTokenId[tokenId], "PAPER_CLAIMED_FOR_TOKEN_ID");
 
         // Effects
