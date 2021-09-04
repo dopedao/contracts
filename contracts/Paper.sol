@@ -4,9 +4,11 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Paper is ERC20, ERC20Snapshot, Ownable {
+contract Paper is ERC20, ERC20Permit, ERC20Votes, ERC20Snapshot, Ownable {
     // Dope Wars Loot: https://etherscan.io/address/0x8707276DF042E89669d69A177d3DA7dC78bd8723
     IERC721Enumerable public loot = IERC721Enumerable(0x8707276DF042E89669d69A177d3DA7dC78bd8723);
     // DopeDAO timelock: https://etherscan.io/address/0xb57ab8767cae33be61ff15167134861865f7d22c
@@ -22,22 +24,12 @@ contract Paper is ERC20, ERC20Snapshot, Ownable {
     // track claimedTokens
     mapping(uint256 => bool) public claimedByTokenId;
 
-    constructor() ERC20("Paper", "PAPER") {
+    constructor() ERC20("Paper", "PAPER") ERC20Permit("PAPER") {
         transferOwnership(daoAddress);
     }
 
     function snapshot() public onlyOwner {
         _snapshot();
-    }
-
-    // The following functions are overrides required by Solidity.
-
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override(ERC20, ERC20Snapshot) {
-        super._beforeTokenTransfer(from, to, amount);
     }
 
     /// @notice Claim Paper for a given Dope Wars Loot ID
@@ -122,5 +114,31 @@ contract Paper is ERC20, ERC20Snapshot, Ownable {
 
     function mint(address to, uint256 amount) external onlyOwner {
         _mint(to, amount);
+    }
+
+    // The following functions are overrides required by Solidity.
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20, ERC20Snapshot) {
+        super._beforeTokenTransfer(from, to, amount);
+    }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20, ERC20Votes) {
+        super._afterTokenTransfer(from, to, amount);
+    }
+
+    function _mint(address to, uint256 amount) internal override(ERC20, ERC20Votes) {
+        super._mint(to, amount);
+    }
+
+    function _burn(address account, uint256 amount) internal override(ERC20, ERC20Votes) {
+        super._burn(account, amount);
     }
 }
