@@ -28,7 +28,7 @@ contract Paper is ERC20, ERC20Permit, ERC20Votes, ERC20Snapshot, Ownable {
         transferOwnership(timelock);
     }
 
-    function snapshot() public onlyOwner {
+    function snapshot() external onlyOwner {
         _snapshot();
     }
 
