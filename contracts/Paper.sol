@@ -1,33 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts@4.3.0/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts@4.3.0/token/ERC20/extensions/ERC20Snapshot.sol";
-import "@openzeppelin/contracts@4.3.0/token/ERC721/extensions/IERC721Enumerable.sol";
-import "@openzeppelin/contracts@4.3.0/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Paper is ERC20, ERC20Snapshot, Ownable {
-    // Dope Wars Loot contract is available at https://etherscan.io/address/0x8707276DF042E89669d69A177d3DA7dC78bd8723
-    IERC721Enumerable public dopeWarsLootContract = IERC721Enumerable(0x8707276DF042E89669d69A177d3DA7dC78bd8723);
+    // Dope Wars Loot: https://etherscan.io/address/0x8707276DF042E89669d69A177d3DA7dC78bd8723
+    IERC721Enumerable public loot = IERC721Enumerable(0x8707276DF042E89669d69A177d3DA7dC78bd8723);
+    // DopeDAO timelock: https://etherscan.io/address/0xb57ab8767cae33be61ff15167134861865f7d22c
+    address public daoAddress = 0xB57Ab8767CAe33bE61fF15167134861865F7D22C;
 
     // 8000 tokens number 1-8000
     uint256 public tokenIdStart = 1;
     uint256 public tokenIdEnd = 8000;
 
-    // Give out 50% of tokens, evenly split across each NFT
-    uint256 public supply = 1000000000 * (10**decimals());
-    uint256 public paperPerTokenId = supply / 2 / tokenIdEnd ;
-    
+    // Give out 1bn of tokens, evenly split across each NFT
+    uint256 public paperPerTokenId = (1000000000 * (10**decimals())) / tokenIdEnd;
+
     // track claimedTokens
     mapping(uint256 => bool) public claimedByTokenId;
-    
-    // TODO verify?
-    address public daoAddress = 0x8707276DF042E89669d69A177d3DA7dC78bd8723;
-    
+
     constructor() ERC20("Paper", "PAPER") {
         transferOwnership(daoAddress);
-        dopeWarsLootContract = IERC721Enumerable(dopeWarsLootContractAddress);
-        _mint(daoAddress, supply / 2);
     }
 
     function snapshot() public onlyOwner {
@@ -36,22 +32,12 @@ contract Paper is ERC20, ERC20Snapshot, Ownable {
 
     // The following functions are overrides required by Solidity.
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount)
-        internal
-        override(ERC20, ERC20Snapshot)
-    {
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override(ERC20, ERC20Snapshot) {
         super._beforeTokenTransfer(from, to, amount);
-    }
-
-    /// @notice Allows the DAO to set a new contract address for Dope Wars Loot. This is
-    /// relevant in the event that DWL migrates to a new contract.
-    /// @param dopeWarsLootContractAddress_ The new contract address for DWL
-    function daoSetLootContractAddress(address dopeWarsLootContractAddress_)
-        external
-        onlyOwner
-    {
-        dopeWarsLootContractAddress = dopeWarsLootContractAddress_;
-        dopeWarsLootContract = IERC721Enumerable(dopeWarsLootContractAddress);
     }
 
     /// @notice Claim Paper for a given Dope Wars Loot ID
@@ -63,10 +49,7 @@ contract Paper is ERC20, ERC20Snapshot, Ownable {
         // Checks
 
         // Check that the msgSender owns the token that is being claimed
-        require(
-            _msgSender() == dopeWarsLootContract.ownerOf(tokenId),
-            "MUST_OWN_TOKEN_ID"
-        );
+        require(_msgSender() == loot.ownerOf(tokenId), "MUST_OWN_TOKEN_ID");
 
         // Further Checks, Effects, and Interactions are contained within the
         // _claim() function
@@ -78,7 +61,7 @@ contract Paper is ERC20, ERC20Snapshot, Ownable {
     /// this is a concern, you should use claimRangeForOwner and claim Dope in
     /// batches.
     function claimAllForOwner() external {
-        uint256 tokenBalanceOwner = dopeWarsLootContract.balanceOf(_msgSender());
+        uint256 tokenBalanceOwner = loot.balanceOf(_msgSender());
 
         // Checks
         require(tokenBalanceOwner > 0, "NO_TOKENS_OWNED");
@@ -87,10 +70,7 @@ contract Paper is ERC20, ERC20Snapshot, Ownable {
         for (uint256 i = 0; i < tokenBalanceOwner; i++) {
             // Further Checks, Effects, and Interactions are contained within
             // the _claim() function
-            _claim(
-                dopeWarsLootContract.tokenOfOwnerByIndex(_msgSender(), i),
-                _msgSender()
-            );
+            _claim(loot.tokenOfOwnerByIndex(_msgSender(), i), _msgSender());
         }
     }
 
@@ -99,29 +79,21 @@ contract Paper is ERC20, ERC20Snapshot, Ownable {
     /// @notice This function is useful if you own too much DWL to claim all at
     /// once or if you want to leave some Paper unclaimed. If you leave Paper
     /// unclaimed, however, you cannot claim it once the next season starts.
-    function claimRangeForOwner(uint256 ownerIndexStart, uint256 ownerIndexEnd)
-        external
-    {
-        uint256 tokenBalanceOwner = dopeWarsLootContract.balanceOf(_msgSender());
+    function claimRangeForOwner(uint256 ownerIndexStart, uint256 ownerIndexEnd) external {
+        uint256 tokenBalanceOwner = loot.balanceOf(_msgSender());
 
         // Checks
         require(tokenBalanceOwner > 0, "NO_TOKENS_OWNED");
 
         // We use < for ownerIndexEnd and tokenBalanceOwner because
         // tokenOfOwnerByIndex is 0-indexed while the token balance is 1-indexed
-        require(
-            ownerIndexStart >= 0 && ownerIndexEnd < tokenBalanceOwner,
-            "INDEX_OUT_OF_RANGE"
-        );
+        require(ownerIndexStart >= 0 && ownerIndexEnd < tokenBalanceOwner, "INDEX_OUT_OF_RANGE");
 
         // i <= ownerIndexEnd because ownerIndexEnd is 0-indexed
         for (uint256 i = ownerIndexStart; i <= ownerIndexEnd; i++) {
             // Further Checks, Effects, and Interactions are contained within
             // the _claim() function
-            _claim(
-                dopeWarsLootContract.tokenOfOwnerByIndex(_msgSender(), i),
-                _msgSender()
-            );
+            _claim(loot.tokenOfOwnerByIndex(_msgSender(), i), _msgSender());
         }
     }
 
@@ -130,17 +102,11 @@ contract Paper is ERC20, ERC20Snapshot, Ownable {
         // Checks
         // Check that the token ID is in range
         // We use >= and <= to here because all of the token IDs are 0-indexed
-        require(
-            tokenId >= tokenIdStart && tokenId <= tokenIdEnd,
-            "TOKEN_ID_OUT_OF_RANGE"
-        );
+        require(tokenId >= tokenIdStart && tokenId <= tokenIdEnd, "TOKEN_ID_OUT_OF_RANGE");
 
         // Check that Paper have not already been claimed this season
         // for a given tokenId
-        require(
-            !claimedByTokenId[tokenId],
-            "PAPER_CLAIMED_FOR_TOKEN_ID"
-        );
+        require(!claimedByTokenId[tokenId], "PAPER_CLAIMED_FOR_TOKEN_ID");
 
         // Effects
 
@@ -152,5 +118,9 @@ contract Paper is ERC20, ERC20Snapshot, Ownable {
 
         // Send Paper to the owner of the token ID
         _mint(tokenOwner, paperPerTokenId);
+    }
+
+    function mint(address to, uint256 amount) external onlyOwner {
+        _mint(to, amount);
     }
 }
