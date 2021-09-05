@@ -27,9 +27,8 @@ const config: HardhatUserConfig = {
       forking: process.env.HARDHAT_FORK
         ? {
           url: url(process.env.HARDHAT_FORK),
-          blockNumber: process.env.HARDHAT_FORK_NUMBER
-            ? parseInt(process.env.HARDHAT_FORK_NUMBER)
-            : undefined,
+          // After DOPE, Timelock, PAPER, DAO deploys
+          blockNumber:  13251088,
         }
         : undefined,
     },

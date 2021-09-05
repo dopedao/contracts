@@ -43,6 +43,6 @@ export function getMnemonic(networkName?: string): string {
   return mnemonic;
 }
 
-export function accounts(networkName?: string): {mnemonic: string} {
-  return {mnemonic: getMnemonic(networkName)};
+export function accounts(networkName?: string): { mnemonic: string } {
+  return { mnemonic: getMnemonic(networkName) };
 }
