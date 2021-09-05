@@ -35,7 +35,7 @@
 
 pragma solidity ^0.8.6;
 
-import './NounsDAOInterfaces.sol';
+import "./NounsDAOInterfaces.sol";
 
 contract NounsDAOProxy is NounsDAOProxyStorage, NounsDAOEvents {
     constructor(
@@ -55,7 +55,7 @@ contract NounsDAOProxy is NounsDAOProxyStorage, NounsDAOEvents {
         delegateTo(
             implementation_,
             abi.encodeWithSignature(
-                'initialize(address,address,address,uint256,uint256,uint256,uint256)',
+                "initialize(address,address,address,uint256,uint256,uint256,uint256)",
                 timelock_,
                 nouns_,
                 vetoer_,
@@ -76,8 +76,8 @@ contract NounsDAOProxy is NounsDAOProxyStorage, NounsDAOEvents {
      * @param implementation_ The address of the new implementation for delegation
      */
     function _setImplementation(address implementation_) public {
-        require(msg.sender == admin, 'NounsDAOProxy::_setImplementation: admin only');
-        require(implementation_ != address(0), 'NounsDAOProxy::_setImplementation: invalid implementation address');
+        require(msg.sender == admin, "NounsDAOProxy::_setImplementation: admin only");
+        require(implementation_ != address(0), "NounsDAOProxy::_setImplementation: invalid implementation address");
 
         address oldImplementation = implementation;
         implementation = implementation_;
@@ -92,12 +92,14 @@ contract NounsDAOProxy is NounsDAOProxyStorage, NounsDAOEvents {
      * @param data The raw data to delegatecall
      */
     function delegateTo(address callee, bytes memory data) internal {
+        // solhint-disable
         (bool success, bytes memory returnData) = callee.delegatecall(data);
         assembly {
             if eq(success, 0) {
                 revert(add(returnData, 0x20), returndatasize())
             }
         }
+        // solhint-enable
     }
 
     /**
@@ -106,6 +108,7 @@ contract NounsDAOProxy is NounsDAOProxyStorage, NounsDAOEvents {
      * or forwards reverts.
      */
     function _fallback() internal {
+        // solhint-disable
         // delegate all other functions to current implementation
         (bool success, ) = implementation.delegatecall(msg.data);
 
@@ -121,6 +124,7 @@ contract NounsDAOProxy is NounsDAOProxyStorage, NounsDAOEvents {
                 return(free_mem_ptr, returndatasize())
             }
         }
+        // solhint-enable
     }
 
     /**

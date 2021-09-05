@@ -217,7 +217,7 @@ contract NounsDAOStorageV1 is NounsDAOProxyStorage {
 interface INounsDAOExecutor {
     function delay() external view returns (uint256);
 
-    function GRACE_PERIOD() external view returns (uint256);
+    function GRACE_PERIOD() external view returns (uint256); // solhint-disable-line
 
     function acceptAdmin() external;
 

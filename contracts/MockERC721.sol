@@ -9,7 +9,7 @@ contract MockERC721 is ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    constructor() ERC721("MockNFT", "MNFT") {}
+    constructor() ERC721("MockNFT", "MNFT") {} // solhint-disable-line
 
     function mint(address recipient, string memory tokenURI) public returns (uint256) {
         _tokenIds.increment();

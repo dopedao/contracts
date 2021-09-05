@@ -3,3 +3,5 @@
 build/
 dist/
 node_modules/
+
+NounsDAOLogicV1.sol

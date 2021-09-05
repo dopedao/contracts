@@ -35,7 +35,9 @@ export function shouldBehaveLikeNftStake(): void {
     // Approve nftStake to take the token
     await this.mockERC721.connect(this.signers.user1).approve(this.nftStake.address, tokenId);
 
-    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], false)).to.be.revertedWith("nftstake: must accept terms of service");
+    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], false)).to.be.revertedWith(
+      "nftstake: must accept terms of service",
+    );
 
     // Try to stake it
     await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], true)).to.not.be.reverted;
@@ -54,15 +56,16 @@ export function shouldBehaveLikeNftStake(): void {
 
     // estimate stake
     const estimatedPayout =
-      (currentBlock - startStake) *
-      (await (await this.nftStake.connect(this.signers.user1).emissionRate()).toNumber());
+      (currentBlock - startStake) * (await (await this.nftStake.connect(this.signers.user1).emissionRate()).toNumber());
 
     // check if estimated stake matches contract
     expect(await (await this.nftStake.connect(this.signers.user1).rewardOf(tokenId)).toNumber()).to.eql(
       estimatedPayout,
     );
 
-    await expect(this.nftStake.connect(this.signers.user1).unstake([tokenId], false)).to.be.revertedWith("nftstake: must accept terms of service");
+    await expect(this.nftStake.connect(this.signers.user1).unstake([tokenId], false)).to.be.revertedWith(
+      "nftstake: must accept terms of service",
+    );
 
     // try to unstake
     await expect(this.nftStake.connect(this.signers.user1).unstake([tokenId], true)).to.not.be.reverted;
@@ -85,7 +88,9 @@ export function shouldBehaveLikeNftStake(): void {
     // Approve nftStake to take the token
     await this.mockERC721.connect(this.signers.user1).approve(this.nftStake.address, tokenId);
 
-    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], false)).to.be.revertedWith("nftstake: must accept terms of service");
+    await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], false)).to.be.revertedWith(
+      "nftstake: must accept terms of service",
+    );
 
     // Try to stake it
     await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], true)).to.not.be.reverted;
@@ -94,9 +99,7 @@ export function shouldBehaveLikeNftStake(): void {
     expect(await this.mockERC721.connect(this.signers.admin).ownerOf(tokenId)).to.eql(this.nftStake.address);
 
     // check if estimated stake matches contract
-    expect(await (await this.nftStake.connect(this.signers.user1).rewardOf(tokenId)).toNumber()).to.eql(
-      0,
-    );
+    expect(await (await this.nftStake.connect(this.signers.user1).rewardOf(tokenId)).toNumber()).to.eql(0);
 
     // try to unstake
     await expect(this.nftStake.connect(this.signers.user1).unstake([tokenId], true)).to.not.be.reverted;
@@ -133,9 +136,7 @@ export function shouldBehaveLikeNftStake(): void {
     await network.provider.send("evm_mine");
     await network.provider.send("evm_mine");
 
-    expect((await this.nftStake.connect(this.signers.user1).rewardOf(tokenId)).toNumber()).to.eq(
-      4 * this.emission,
-    );
+    expect((await this.nftStake.connect(this.signers.user1).rewardOf(tokenId)).toNumber()).to.eq(4 * this.emission);
   });
 
   it("should allow harvesting without withdrawl", async function () {
@@ -152,9 +153,7 @@ export function shouldBehaveLikeNftStake(): void {
     await network.provider.send("evm_mine");
 
     // get current earned stake
-    const currentEarnedStake = (
-      await this.nftStake.connect(this.signers.user1).rewardOf(tokenId)
-    ).toNumber();
+    const currentEarnedStake = (await this.nftStake.connect(this.signers.user1).rewardOf(tokenId)).toNumber();
 
     // get current token balance of user
     const balanceBeforeHarvest = (
@@ -162,9 +161,7 @@ export function shouldBehaveLikeNftStake(): void {
     ).toNumber();
 
     // get the staked receipt
-    const stakedAtOriginal = (
-      await this.nftStake.connect(this.signers.user1).receipt(tokenId)
-    ).from.toNumber();
+    const stakedAtOriginal = (await this.nftStake.connect(this.signers.user1).receipt(tokenId)).from.toNumber();
 
     // get current blockNumer
     let currentBlock = parseInt(await network.provider.send("eth_blockNumber"), 16);
@@ -193,9 +190,7 @@ export function shouldBehaveLikeNftStake(): void {
     ).to.eq(currentEarnedStake);
 
     // check the new receipt
-    const updatedStakeDate = (
-      await this.nftStake.connect(this.signers.user1).receipt(tokenId)
-    ).from.toNumber();
+    const updatedStakeDate = (await this.nftStake.connect(this.signers.user1).receipt(tokenId)).from.toNumber();
     currentBlock = parseInt(await network.provider.send("eth_blockNumber"), 16);
 
     // check the staked receipt has been updated to current blocktime
@@ -211,9 +206,7 @@ export function shouldBehaveLikeNftStake(): void {
     await network.provider.send("evm_mine");
 
     // check that there is now a pending payout availible again
-    expect((await this.nftStake.connect(this.signers.user1).rewardOf(tokenId)).toNumber()).to.eq(
-      1 * this.emission,
-    );
+    expect((await this.nftStake.connect(this.signers.user1).rewardOf(tokenId)).toNumber()).to.eq(1 * this.emission);
   });
 
   it("should allow user to unstake if reward gt balance", async function () {
@@ -221,7 +214,7 @@ export function shouldBehaveLikeNftStake(): void {
     // Approve nftStake to take the token
     await this.mockERC721.connect(this.signers.user1).approve(this.nftStake.address, tokenId);
 
-    await this.nftStake.connect(this.signers.dao).setEmissionRate(10000)
+    await this.nftStake.connect(this.signers.dao).setEmissionRate(10000);
 
     // Try to stake it
     await expect(this.nftStake.connect(this.signers.user1).stake([tokenId], true)).to.not.be.reverted;

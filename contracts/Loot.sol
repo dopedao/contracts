@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: NOLICENSE
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -25,11 +26,11 @@ abstract contract ERC721Checkpointable is ERC721Enumerable {
 
     /// @notice The EIP-712 typehash for the contract's domain
     bytes32 public constant DOMAIN_TYPEHASH =
-        keccak256('EIP712Domain(string name,uint256 chainId,address verifyingContract)');
+        keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
 
     /// @notice The EIP-712 typehash for the delegation struct used by the contract
     bytes32 public constant DELEGATION_TYPEHASH =
-        keccak256('Delegation(address delegatee,uint256 nonce,uint256 expiry)');
+        keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
     /// @notice A record of states for signing / validating signatures
     mapping(address => uint256) public nonces;
@@ -45,7 +46,7 @@ abstract contract ERC721Checkpointable is ERC721Enumerable {
      * @dev Used when calling `_delegate()`
      */
     function votesToDelegate(address delegator) public view returns (uint96) {
-        return safe96(balanceOf(delegator), 'ERC721Checkpointable::votesToDelegate: amount exceeds 96 bits');
+        return safe96(balanceOf(delegator), "ERC721Checkpointable::votesToDelegate: amount exceeds 96 bits");
     }
 
     /**
@@ -103,11 +104,11 @@ abstract contract ERC721Checkpointable is ERC721Enumerable {
             abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name())), getChainId(), address(this))
         );
         bytes32 structHash = keccak256(abi.encode(DELEGATION_TYPEHASH, delegatee, nonce, expiry));
-        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', domainSeparator, structHash));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
         address signatory = ecrecover(digest, v, r, s);
-        require(signatory != address(0), 'ERC721Checkpointable::delegateBySig: invalid signature');
-        require(nonce == nonces[signatory]++, 'ERC721Checkpointable::delegateBySig: invalid nonce');
-        require(block.timestamp <= expiry, 'ERC721Checkpointable::delegateBySig: signature expired');
+        require(signatory != address(0), "ERC721Checkpointable::delegateBySig: invalid signature");
+        require(nonce == nonces[signatory]++, "ERC721Checkpointable::delegateBySig: invalid nonce");
+        require(block.timestamp <= expiry, "ERC721Checkpointable::delegateBySig: signature expired");
         return _delegate(signatory, delegatee);
     }
 
@@ -129,7 +130,7 @@ abstract contract ERC721Checkpointable is ERC721Enumerable {
      * @return The number of votes the account had as of the given block
      */
     function getPriorVotes(address account, uint256 blockNumber) public view returns (uint96) {
-        require(blockNumber < block.number, 'ERC721Checkpointable::getPriorVotes: not yet determined');
+        require(blockNumber < block.number, "ERC721Checkpointable::getPriorVotes: not yet determined");
 
         uint32 nCheckpoints = numCheckpoints[account];
         if (nCheckpoints == 0) {
@@ -184,14 +185,14 @@ abstract contract ERC721Checkpointable is ERC721Enumerable {
             if (srcRep != address(0)) {
                 uint32 srcRepNum = numCheckpoints[srcRep];
                 uint96 srcRepOld = srcRepNum > 0 ? checkpoints[srcRep][srcRepNum - 1].votes : 0;
-                uint96 srcRepNew = sub96(srcRepOld, amount, 'ERC721Checkpointable::_moveDelegates: amount underflows');
+                uint96 srcRepNew = sub96(srcRepOld, amount, "ERC721Checkpointable::_moveDelegates: amount underflows");
                 _writeCheckpoint(srcRep, srcRepNum, srcRepOld, srcRepNew);
             }
 
             if (dstRep != address(0)) {
                 uint32 dstRepNum = numCheckpoints[dstRep];
                 uint96 dstRepOld = dstRepNum > 0 ? checkpoints[dstRep][dstRepNum - 1].votes : 0;
-                uint96 dstRepNew = add96(dstRepOld, amount, 'ERC721Checkpointable::_moveDelegates: amount overflows');
+                uint96 dstRepNew = add96(dstRepOld, amount, "ERC721Checkpointable::_moveDelegates: amount overflows");
                 _writeCheckpoint(dstRep, dstRepNum, dstRepOld, dstRepNew);
             }
         }
@@ -205,7 +206,7 @@ abstract contract ERC721Checkpointable is ERC721Enumerable {
     ) internal {
         uint32 blockNumber = safe32(
             block.number,
-            'ERC721Checkpointable::_writeCheckpoint: block number exceeds 32 bits'
+            "ERC721Checkpointable::_writeCheckpoint: block number exceeds 32 bits"
         );
 
         if (nCheckpoints > 0 && checkpoints[delegatee][nCheckpoints - 1].fromBlock == blockNumber) {
@@ -248,17 +249,12 @@ abstract contract ERC721Checkpointable is ERC721Enumerable {
     }
 
     function getChainId() internal view returns (uint256) {
-        uint256 chainId;
-        assembly {
-            chainId := chainid()
-        }
-        return chainId;
+        return block.chainid;
     }
 }
 
 library Base64 {
-    bytes internal constant TABLE =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    bytes internal constant TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     /// @notice Encodes some bytes to the base64 representation
     function encode(bytes memory data) internal pure returns (string memory) {
@@ -273,6 +269,7 @@ library Base64 {
 
         bytes memory table = TABLE;
 
+        // solhint-disable
         assembly {
             let tablePtr := add(table, 1)
             let resultPtr := add(result, 32)
@@ -287,20 +284,11 @@ library Base64 {
 
                 let out := mload(add(tablePtr, and(shr(18, input), 0x3F)))
                 out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(shr(12, input), 0x3F))), 0xFF)
-                )
+                out := add(out, and(mload(add(tablePtr, and(shr(12, input), 0x3F))), 0xFF))
                 out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(shr(6, input), 0x3F))), 0xFF)
-                )
+                out := add(out, and(mload(add(tablePtr, and(shr(6, input), 0x3F))), 0xFF))
                 out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(input, 0x3F))), 0xFF)
-                )
+                out := add(out, and(mload(add(tablePtr, and(input, 0x3F))), 0xFF))
                 out := shl(224, out)
 
                 mstore(resultPtr, out)
@@ -318,6 +306,7 @@ library Base64 {
 
             mstore(result, encodedLen)
         }
+        // solhint-enable
 
         return string(result);
     }
@@ -325,267 +314,267 @@ library Base64 {
 
 contract DopeWarsLoot is ERC721Checkpointable, ReentrancyGuard, Ownable {
     string[] private weapons = [
-       "Pocket Knife",
-       "Chain",
-       "Knife",
-       "Crowbar",
-       "Handgun",
-       "AK47",
-       "Shovel",
-       "Baseball Bat",
-       "Tire Iron",
-       "Police Baton",
-       "Pepper Spray",
-       "Razor Blade",
-       "Chain",
-       "Taser",
-       "Brass Knuckles",
-       "Shotgun",
-       "Glock",
-       "Uzi"
+        "Pocket Knife",
+        "Chain",
+        "Knife",
+        "Crowbar",
+        "Handgun",
+        "AK47",
+        "Shovel",
+        "Baseball Bat",
+        "Tire Iron",
+        "Police Baton",
+        "Pepper Spray",
+        "Razor Blade",
+        "Chain",
+        "Taser",
+        "Brass Knuckles",
+        "Shotgun",
+        "Glock",
+        "Uzi"
     ];
 
     string[] private clothes = [
-       "White T Shirt",
-       "Black T Shirt",
-       "White Hoodie",
-       "Black Hoodie",
-       "Bulletproof Vest",
-       "3 Piece Suit",
-       "Checkered Shirt",
-       "Bikini",
-       "Golden Shirt",
-       "Leather Vest",
-       "Blood Stained Shirt",
-       "Police Uniform",
-       "Combat Jacket",
-       "Basketball Jersey",
-       "Track Suit",
-       "Trenchcoat",
-       "White Tank Top",
-       "Black Tank Top",
-       "Shirtless",
-       "Naked"
+        "White T Shirt",
+        "Black T Shirt",
+        "White Hoodie",
+        "Black Hoodie",
+        "Bulletproof Vest",
+        "3 Piece Suit",
+        "Checkered Shirt",
+        "Bikini",
+        "Golden Shirt",
+        "Leather Vest",
+        "Blood Stained Shirt",
+        "Police Uniform",
+        "Combat Jacket",
+        "Basketball Jersey",
+        "Track Suit",
+        "Trenchcoat",
+        "White Tank Top",
+        "Black Tank Top",
+        "Shirtless",
+        "Naked"
     ];
 
     string[] private vehicle = [
-       "Dodge",
-       "Porsche",
-       "Tricycle",
-       "Scooter",
-       "ATV",
-       "Push Bike",
-       "Electric Scooter",
-       "Golf Cart",
-       "Chopper",
-       "Rollerblades",
-       "Lowrider",
-       "Camper",
-       "Rolls Royce",
-       "BMW M3",
-       "Bike",
-       "C63 AMG",
-       "G Wagon"
+        "Dodge",
+        "Porsche",
+        "Tricycle",
+        "Scooter",
+        "ATV",
+        "Push Bike",
+        "Electric Scooter",
+        "Golf Cart",
+        "Chopper",
+        "Rollerblades",
+        "Lowrider",
+        "Camper",
+        "Rolls Royce",
+        "BMW M3",
+        "Bike",
+        "C63 AMG",
+        "G Wagon"
     ];
 
     string[] private waistArmor = [
-       "Gucci Belt",
-       "Versace Belt",
-       "Studded Belt",
-       "Taser Holster",
-       "Concealed Holster",
-       "Diamond Belt",
-       "D Ring Belt",
-       "Suspenders",
-       "Military Belt",
-       "Metal Belt",
-       "Pistol Holster",
-       "SMG Holster",
-       "Knife Holster",
-       "Laces",
-       "Sash",
-       "Fanny Pack"
+        "Gucci Belt",
+        "Versace Belt",
+        "Studded Belt",
+        "Taser Holster",
+        "Concealed Holster",
+        "Diamond Belt",
+        "D Ring Belt",
+        "Suspenders",
+        "Military Belt",
+        "Metal Belt",
+        "Pistol Holster",
+        "SMG Holster",
+        "Knife Holster",
+        "Laces",
+        "Sash",
+        "Fanny Pack"
     ];
 
     string[] private footArmor = [
-       "Black Air Force 1s",
-       "White Forces",
-       "Air Jordan 1 Chicagos",
-       "Gucci Tennis 84",
-       "Air Max 95",
-       "Timberlands",
-       "Reebok Classics",
-       "Flip Flops",
-       "Nike Cortez",
-       "Dress Shoes",
-       "Converse All Stars",
-       "White Slippers",
-       "Gucci Slides",
-       "Alligator Dress Shoes",
-       "Socks",
-       "Open Toe Sandals",
-       "Barefoot"
+        "Black Air Force 1s",
+        "White Forces",
+        "Air Jordan 1 Chicagos",
+        "Gucci Tennis 84",
+        "Air Max 95",
+        "Timberlands",
+        "Reebok Classics",
+        "Flip Flops",
+        "Nike Cortez",
+        "Dress Shoes",
+        "Converse All Stars",
+        "White Slippers",
+        "Gucci Slides",
+        "Alligator Dress Shoes",
+        "Socks",
+        "Open Toe Sandals",
+        "Barefoot"
     ];
 
     string[] private handArmor = [
-       "Rubber Gloves",
-       "Baseball Gloves",
-       "Boxing Gloves",
-       "MMA Wraps",
-       "Winter Gloves",
-       "Nitrile Gloves",
-       "Studded Leather Gloves",
-       "Combat Gloves",
-       "Leather Gloves",
-       "White Gloves",
-       "Black Gloves",
-       "Kevlar Gloves",
-       "Surgical Gloves",
-       "Fingerless Gloves"
+        "Rubber Gloves",
+        "Baseball Gloves",
+        "Boxing Gloves",
+        "MMA Wraps",
+        "Winter Gloves",
+        "Nitrile Gloves",
+        "Studded Leather Gloves",
+        "Combat Gloves",
+        "Leather Gloves",
+        "White Gloves",
+        "Black Gloves",
+        "Kevlar Gloves",
+        "Surgical Gloves",
+        "Fingerless Gloves"
     ];
 
     string[] private necklaces = ["Bronze Chain", "Silver Chain", "Gold Chain"];
 
     string[] private rings = [
-       "Gold Ring",
-       "Silver Ring",
-       "Diamond Ring",
-       "Platinum Ring",
-       "Titanium Ring",
-       "Pinky Ring",
-       "Thumb Ring"
+        "Gold Ring",
+        "Silver Ring",
+        "Diamond Ring",
+        "Platinum Ring",
+        "Titanium Ring",
+        "Pinky Ring",
+        "Thumb Ring"
     ];
 
     string[] private suffixes = [
-       "from the Bayou",
-       "from Atlanta",
-       "from Compton",
-       "from Oakland",
-       "from SOMA",
-       "from Hong Kong",
-       "from London",
-       "from Chicago",
-       "from Brooklyn",
-       "from Detroit",
-       "from Mob Town",
-       "from Murdertown",
-       "from Sin City",
-       "from Big Smoke",
-       "from the Backwoods",
-       "from the Big Easy",
-       "from Queens",
-       "from BedStuy",
-       "from Buffalo"
+        "from the Bayou",
+        "from Atlanta",
+        "from Compton",
+        "from Oakland",
+        "from SOMA",
+        "from Hong Kong",
+        "from London",
+        "from Chicago",
+        "from Brooklyn",
+        "from Detroit",
+        "from Mob Town",
+        "from Murdertown",
+        "from Sin City",
+        "from Big Smoke",
+        "from the Backwoods",
+        "from the Big Easy",
+        "from Queens",
+        "from BedStuy",
+        "from Buffalo"
     ];
 
     string[] private drugs = [
-       "Weed",
-       "Cocaine",
-       "Ludes",
-       "Acid",
-       "Speed",
-       "Heroin",
-       "Oxycontin",
-       "Zoloft",
-       "Fentanyl",
-       "Krokodil",
-       "Coke",
-       "Crack",
-       "PCP",
-       "LSD",
-       "Shrooms",
-       "Soma",
-       "Xanax",
-       "Molly",
-       "Adderall"
+        "Weed",
+        "Cocaine",
+        "Ludes",
+        "Acid",
+        "Speed",
+        "Heroin",
+        "Oxycontin",
+        "Zoloft",
+        "Fentanyl",
+        "Krokodil",
+        "Coke",
+        "Crack",
+        "PCP",
+        "LSD",
+        "Shrooms",
+        "Soma",
+        "Xanax",
+        "Molly",
+        "Adderall"
     ];
 
     string[] private namePrefixes = [
-       "OG",
-       "King of the Street",
-       "Cop Killer",
-       "Blasta",
-       "Lil",
-       "Big",
-       "Tiny",
-       "Playboi",
-       "Snitch boi",
-       "Kingpin",
-       "Father of the Game",
-       "Son of the Game",
-       "Loose Trigger Finger",
-       "Slum Prince",
-       "Corpse",
-       "Mother of the Game",
-       "Daughter of the Game",
-       "Slum Princess",
-       "Da",
-       "Notorious",
-       "The Boss of Bosses",
-       "The Dog Killer",
-       "The Killer of Dog Killer",
-       "Slum God",
-       "Candyman",
-       "Candywoman",
-       "The Butcher",
-       "Yung Capone",
-       "Yung Chapo",
-       "Yung Blanco",
-       "The Fixer",
-       "Jail Bird",
-       "Corner Cockatoo",
-       "Powder Prince",
-       "Hippie",
-       "John E. Dell",
-       "The Burning Man",
-       "The Burning Woman",
-       "Kid of the Game",
-       "Street Queen",
-       "The Killer of Dog Killers Killer",
-       "Slum General",
-       "Mafia Prince",
-       "Crooked Cop",
-       "Street Mayor",
-       "Undercover Cop",
-       "Oregano Farmer",
-       "Bloody",
-       "High on the Supply",
-       "The Orphan",
-       "The Orphan Maker",
-       "Ex Boxer",
-       "Ex Cop",
-       "Ex School Teacher",
-       "Ex Priest",
-       "Ex Engineer",
-       "Street Robinhood",
-       "Hell Bound",
-       "SoundCloud Rapper",
-       "Gang Leader",
-       "The CEO",
-       "The Freelance Pharmacist",
-       "Soccer Mom",
-       "Soccer Dad"
+        "OG",
+        "King of the Street",
+        "Cop Killer",
+        "Blasta",
+        "Lil",
+        "Big",
+        "Tiny",
+        "Playboi",
+        "Snitch boi",
+        "Kingpin",
+        "Father of the Game",
+        "Son of the Game",
+        "Loose Trigger Finger",
+        "Slum Prince",
+        "Corpse",
+        "Mother of the Game",
+        "Daughter of the Game",
+        "Slum Princess",
+        "Da",
+        "Notorious",
+        "The Boss of Bosses",
+        "The Dog Killer",
+        "The Killer of Dog Killer",
+        "Slum God",
+        "Candyman",
+        "Candywoman",
+        "The Butcher",
+        "Yung Capone",
+        "Yung Chapo",
+        "Yung Blanco",
+        "The Fixer",
+        "Jail Bird",
+        "Corner Cockatoo",
+        "Powder Prince",
+        "Hippie",
+        "John E. Dell",
+        "The Burning Man",
+        "The Burning Woman",
+        "Kid of the Game",
+        "Street Queen",
+        "The Killer of Dog Killers Killer",
+        "Slum General",
+        "Mafia Prince",
+        "Crooked Cop",
+        "Street Mayor",
+        "Undercover Cop",
+        "Oregano Farmer",
+        "Bloody",
+        "High on the Supply",
+        "The Orphan",
+        "The Orphan Maker",
+        "Ex Boxer",
+        "Ex Cop",
+        "Ex School Teacher",
+        "Ex Priest",
+        "Ex Engineer",
+        "Street Robinhood",
+        "Hell Bound",
+        "SoundCloud Rapper",
+        "Gang Leader",
+        "The CEO",
+        "The Freelance Pharmacist",
+        "Soccer Mom",
+        "Soccer Dad"
     ];
 
     string[] private nameSuffixes = [
-       "Feared",
-       "Baron",
-       "Vicious",
-       "Killer",
-       "Fugitive",
-       "Triggerman",
-       "Conman",
-       "Outlaw",
-       "Assassin",
-       "Shooter",
-       "Hitman",
-       "Bloodstained",
-       "Punishment",
-       "Sin",
-       "Smuggled",
-       "LastResort",
-       "Contraband",
-       "Illicit"
+        "Feared",
+        "Baron",
+        "Vicious",
+        "Killer",
+        "Fugitive",
+        "Triggerman",
+        "Conman",
+        "Outlaw",
+        "Assassin",
+        "Shooter",
+        "Hitman",
+        "Bloodstained",
+        "Punishment",
+        "Sin",
+        "Smuggled",
+        "LastResort",
+        "Contraband",
+        "Illicit"
     ];
 
     function random(string memory input) internal pure returns (uint256) {
@@ -633,51 +622,31 @@ contract DopeWarsLoot is ERC721Checkpointable, ReentrancyGuard, Ownable {
         string memory keyPrefix,
         string[] memory sourceArray
     ) internal view returns (string memory) {
-        uint256 rand = random(
-            string(abi.encodePacked(keyPrefix, toString(tokenId)))
-        );
+        uint256 rand = random(string(abi.encodePacked(keyPrefix, toString(tokenId))));
         string memory output = sourceArray[rand % sourceArray.length];
         uint256 greatness = rand % 21;
         if (greatness > 14) {
-            output = string(
-                abi.encodePacked(output, " ", suffixes[rand % suffixes.length])
-            );
+            output = string(abi.encodePacked(output, " ", suffixes[rand % suffixes.length]));
         }
         if (greatness >= 19) {
             string[2] memory name;
             name[0] = namePrefixes[rand % namePrefixes.length];
             name[1] = nameSuffixes[rand % nameSuffixes.length];
+            // solhint-disable quotes
             if (greatness == 19) {
-                output = string(
-                    abi.encodePacked('"', name[0], " ", name[1], '" ', output)
-                );
+                output = string(abi.encodePacked('"', name[0], " ", name[1], '" ', output));
             } else {
-                output = string(
-                    abi.encodePacked(
-                        '"',
-                        name[0],
-                        " ",
-                        name[1],
-                        '" ',
-                        output,
-                        " +1"
-                    )
-                );
+                output = string(abi.encodePacked('"', name[0], " ", name[1], '" ', output, " +1"));
             }
         }
         return output;
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override
-        returns (string memory)
-    {
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
         string[17] memory parts;
         parts[
             0
-        ] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">';
+        ] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">'; // solhint-disable-line
 
         parts[1] = getWeapon(tokenId);
 
@@ -716,17 +685,7 @@ contract DopeWarsLoot is ERC721Checkpointable, ReentrancyGuard, Ownable {
         parts[16] = "</text></svg>";
 
         string memory output = string(
-            abi.encodePacked(
-                parts[0],
-                parts[1],
-                parts[2],
-                parts[3],
-                parts[4],
-                parts[5],
-                parts[6],
-                parts[7],
-                parts[8]
-            )
+            abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8])
         );
         output = string(
             abi.encodePacked(
@@ -742,6 +701,7 @@ contract DopeWarsLoot is ERC721Checkpointable, ReentrancyGuard, Ownable {
             )
         );
 
+        // solhint-disable max-line-length
         string memory json = Base64.encode(
             bytes(
                 string(
@@ -755,12 +715,12 @@ contract DopeWarsLoot is ERC721Checkpointable, ReentrancyGuard, Ownable {
                 )
             )
         );
-        output = string(
-            abi.encodePacked("data:application/json;base64,", json)
-        );
-
+        output = string(abi.encodePacked("data:application/json;base64,", json));
+        // solhint-enable max-line-length
         return output;
     }
+
+    // solhint-enable quotes
 
     function claim(uint256 tokenId) public nonReentrant {
         //CHANGE: limit
@@ -790,5 +750,5 @@ contract DopeWarsLoot is ERC721Checkpointable, ReentrancyGuard, Ownable {
         return string(buffer);
     }
 
-    constructor() ERC721("DOPE", "DOPE") Ownable() {}
+    constructor() ERC721("DOPE", "DOPE") {} // solhint-disable-line
 }
