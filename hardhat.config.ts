@@ -10,67 +10,49 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 
+import { url, accounts } from './utils/network';
+
 import "./tasks/accounts";
 import "./tasks/clean";
 import "./tasks/deployers";
 
-const chainIds = {
-  ganache: 1337,
-  goerli: 5,
-  hardhat: 31337,
-  kovan: 42,
-  mainnet: 1,
-  rinkeby: 4,
-  ropsten: 3,
-};
-
-// Ensure that we have all the environment variables we need.
-const mnemonic: string | undefined = process.env.MNEMONIC;
-if (!mnemonic) {
-  throw new Error("Please set your MNEMONIC in a .env file");
-}
-
-const infuraApiKey: string | undefined = process.env.INFURA_API_KEY;
-if (!infuraApiKey) {
-  throw new Error("Please set your INFURA_API_KEY in a .env file");
-}
-
-function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
-  const url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
-  return {
-    accounts: {
-      count: 10,
-      mnemonic,
-      path: "m/44'/60'/0'/0",
-    },
-    chainId: chainIds[network],
-    url,
-  };
-}
-
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
-  gasReporter: {
-    currency: "USD",
-    enabled: process.env.REPORT_GAS ? true : false,
-    excludeContracts: [],
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-    src: "./contracts",
-  },
   networks: {
     hardhat: {
-      accounts: {
-        mnemonic,
-      },
-      chainId: chainIds.hardhat,
-      gasPrice: 875000000,
-      // See https://github.com/sc-forks/solidity-coverage/issues/652
-      hardfork: process.env.CODE_COVERAGE ? "berlin" : "london",
+      chainId: 1,
+      // process.env.HARDHAT_FORK will specify the network that the fork is made from.
+      // this line ensure the use of the corresponding accounts
+      accounts: accounts(process.env.HARDHAT_FORK),
+      forking: process.env.HARDHAT_FORK
+        ? {
+          url: url(process.env.HARDHAT_FORK),
+          blockNumber: process.env.HARDHAT_FORK_NUMBER
+            ? parseInt(process.env.HARDHAT_FORK_NUMBER)
+            : undefined,
+        }
+        : undefined,
     },
-    goerli: getChainConfig("goerli"),
-    kovan: getChainConfig("kovan"),
-    rinkeby: getChainConfig("rinkeby"),
-    ropsten: getChainConfig("ropsten"),
+    localhost: {
+      url: url('localhost'),
+      accounts: accounts(),
+    },
+    mainnet: {
+      url: url('mainnet'),
+      accounts: accounts('mainnet'),
+    },
+    rinkeby: {
+      url: url('rinkeby'),
+      accounts: accounts('rinkeby'),
+    },
+    kovan: {
+      url: url('kovan'),
+      accounts: accounts('kovan'),
+    },
+    goerli: {
+      url: url('goerli'),
+      accounts: accounts('goerli'),
+    },
   },
   paths: {
     artifacts: "./artifacts",
@@ -97,6 +79,13 @@ const config: HardhatUserConfig = {
   typechain: {
     outDir: "typechain",
     target: "ethers-v5",
+  },
+  gasReporter: {
+    currency: "USD",
+    enabled: process.env.REPORT_GAS ? true : false,
+    excludeContracts: [],
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+    src: "./contracts",
   },
   etherscan: {
     apiKey: "RWNVM4YY577I58CZHRDUSKZJ4CVW3S31YM",
