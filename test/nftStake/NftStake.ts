@@ -24,7 +24,7 @@ describe("Unit tests", function () {
     this.signers.dao = signers[3];
   });
 
-  describe("NFTStake", function () {
+  xdescribe("NFTStake", function () {
     beforeEach(async function () {
       this.emission = 2;
 
