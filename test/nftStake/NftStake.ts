@@ -19,8 +19,8 @@ describe("Unit tests", function () {
 
     const signers: SignerWithAddress[] = await hre.ethers.getSigners();
     this.signers.admin = signers[0];
-    this.signers.user1 = signers[1];
-    this.signers.user2 = signers[2];
+    this.signers.alice = signers[1];
+    this.signers.bob = signers[2];
     this.signers.dao = signers[3];
   });
 
@@ -57,10 +57,10 @@ describe("Unit tests", function () {
       // Mint some NFTS
       const adminERC721Instance: MockERC721 = <MockERC721>await this.mockERC721.connect(this.signers.admin);
 
-      // user1 has tokenId 1
-      // user2 has tokenId 2
-      await adminERC721Instance.mint(await this.signers.user1.getAddress(), "First");
-      await adminERC721Instance.mint(await this.signers.user2.getAddress(), "Second");
+      // alice has tokenId 1
+      // bob has tokenId 2
+      await adminERC721Instance.mint(await this.signers.alice.getAddress(), "First");
+      await adminERC721Instance.mint(await this.signers.bob.getAddress(), "Second");
     });
 
     shouldBehaveLikeNftStake();
