@@ -18,7 +18,7 @@ contract DopeDAO is Governor, GovernorCompatibilityBravo, GovernorVotesComp, Gov
     }
 
     function votingPeriod() public pure override returns (uint256) {
-        return 10; // 1 week (in blocks)
+        return 45818; // 1 week (in blocks)
     }
 
     function quorum(uint256 blockNumber) public pure override returns (uint256) {

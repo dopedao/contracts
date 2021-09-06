@@ -1,6 +1,6 @@
 /**
  *Submitted for verification at Etherscan.io on 2021-09-01
-*/
+ */
 
 // Sources flattened with hardhat v2.6.1 https://hardhat.org
 
@@ -213,7 +213,6 @@ library SafeMath {
     }
 }
 
-
 // File contracts/Timelock.sol
 
 pragma solidity ^0.5.16;
@@ -366,7 +365,6 @@ contract Timelock {
         return block.timestamp;
     }
 }
-
 
 // File contracts/Mock.sol
 
