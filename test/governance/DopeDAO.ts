@@ -54,7 +54,7 @@ describe("DopeDAO", function () {
       await expect(this.timelock.executeTransaction(this.timelock.address, 0, sig, data, eta)).to.not.be.reverted;
       await this.dao.__acceptAdmin()
 
-      console.log((await ethers.provider.getBalance(this.timelock.address)).toString())
+      // console.log((await ethers.provider.getBalance(this.timelock.address)).toString())
 
       const calldata = new ethers.utils.AbiCoder().encode(["string"], ["gang"]);
 
@@ -110,7 +110,7 @@ describe("DopeDAO", function () {
       await expect(this.timelock.executeTransaction(this.timelock.address, 0, sig, data, eta)).to.not.be.reverted;
       await this.dao.__acceptAdmin()
 
-      console.log((await ethers.provider.getBalance(this.timelock.address)).toString())
+      // console.log((await ethers.provider.getBalance(this.timelock.address)).toString())
 
       const calldata = new ethers.utils.AbiCoder().encode(["string"], ["gang"]);
 
