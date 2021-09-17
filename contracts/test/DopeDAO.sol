@@ -6,14 +6,10 @@ import "@openzeppelin/contracts/governance/compatibility/GovernorCompatibilityBr
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesComp.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockCompound.sol";
 
-import "hardhat/console.sol";
+import "../governance/DopeDAO.sol";
 
-contract DopeDAOTest is Governor, GovernorCompatibilityBravo, GovernorVotesComp, GovernorTimelockCompound {
-    constructor(ERC20VotesComp _token, ICompoundTimelock _timelock)
-        Governor("DopeDAO")
-        GovernorVotesComp(_token)
-        GovernorTimelockCompound(_timelock)
-    {}
+contract DopeDAOTest is DopeDAO {
+    constructor(ERC20VotesComp _token, ICompoundTimelock _timelock) DopeDAO(_token, _timelock) {}
 
     function votingDelay() public pure override returns (uint256) {
         return 1;
@@ -29,66 +25,5 @@ contract DopeDAOTest is Governor, GovernorCompatibilityBravo, GovernorVotesComp,
 
     function proposalThreshold() public pure override returns (uint256) {
         return 1;
-    }
-
-    // The following functions are overrides required by Solidity.
-
-    function getVotes(address account, uint256 blockNumber)
-        public
-        view
-        override(IGovernor, GovernorVotesComp)
-        returns (uint256)
-    {
-        return super.getVotes(account, blockNumber);
-    }
-
-    function state(uint256 proposalId)
-        public
-        view
-        override(Governor, IGovernor, GovernorTimelockCompound)
-        returns (ProposalState)
-    {
-        return super.state(proposalId);
-    }
-
-    function propose(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    ) public override(Governor, GovernorCompatibilityBravo, IGovernor) returns (uint256) {
-        return super.propose(targets, values, calldatas, description);
-    }
-
-    function _execute(
-        uint256 proposalId,
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 descriptionHash
-    ) internal override(Governor, GovernorTimelockCompound) {
-        super._execute(proposalId, targets, values, calldatas, descriptionHash);
-    }
-
-    function _cancel(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 descriptionHash
-    ) internal override(Governor, GovernorTimelockCompound) returns (uint256) {
-        return super._cancel(targets, values, calldatas, descriptionHash);
-    }
-
-    function _executor() internal view override(Governor, GovernorTimelockCompound) returns (address) {
-        return super._executor();
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(Governor, IERC165, GovernorTimelockCompound)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
     }
 }

@@ -13,19 +13,19 @@ contract DopeDAO is Governor, GovernorCompatibilityBravo, GovernorVotesComp, Gov
         GovernorTimelockCompound(_timelock)
     {}
 
-    function votingDelay() public pure override returns (uint256) {
+    function votingDelay() public pure virtual override returns (uint256) {
         return 13091; // 2 days (in blocks)
     }
 
-    function votingPeriod() public pure override returns (uint256) {
+    function votingPeriod() public pure virtual override returns (uint256) {
         return 45818; // 1 week (in blocks)
     }
 
-    function quorum(uint256 blockNumber) public pure override returns (uint256) {
+    function quorum(uint256 blockNumber) public pure virtual override returns (uint256) {
         return 500; // DOPE DAO NFT TOKENS
     }
 
-    function proposalThreshold() public pure override returns (uint256) {
+    function proposalThreshold() public pure virtual override returns (uint256) {
         return 50; // DOPE DAO NFT TOKENS
     }
 
@@ -63,9 +63,14 @@ contract DopeDAO is Governor, GovernorCompatibilityBravo, GovernorVotesComp, Gov
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 /*descriptionHash*/
     ) internal override(Governor, GovernorTimelockCompound) {
-        super._execute(proposalId, targets, values, calldatas, descriptionHash);
+        uint256 eta = proposalEta(proposalId);
+        require(eta > 0, "GovernorTimelockCompound: proposal not yet queued");
+        Address.sendValue(payable(timelock()), msg.value);
+        for (uint256 i = 0; i < targets.length; ++i) {
+            ICompoundTimelock(payable(timelock())).executeTransaction(targets[i], values[i], "", calldatas[i], eta);
+        }
     }
 
     function _cancel(
@@ -88,5 +93,12 @@ contract DopeDAO is Governor, GovernorCompatibilityBravo, GovernorVotesComp, Gov
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @dev Function to receive ETH that will be handled by the governor (disabled if executor is a third party contract)
+     */
+    receive() external payable virtual {
+        require(_executor() == address(this));
     }
 }
