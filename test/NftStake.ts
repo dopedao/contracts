@@ -2,11 +2,11 @@ import hre from "hardhat";
 import { Artifact } from "hardhat/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
-import { NftStake } from "../../typechain";
-import { MockERC20 } from "../../typechain";
-import { MockERC721 } from "../../typechain";
+import { NftStake } from "../typechain";
+import { MockERC20 } from "../typechain";
+import { MockERC721 } from "../typechain";
 
-import { Signers } from "../types";
+import { Signers } from "./types";
 
 // test cases
 import { shouldBehaveLikeNftStake } from "./NftStake.behavior";
