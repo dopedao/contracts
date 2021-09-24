@@ -109,7 +109,6 @@ describe("DopeDAO", function () {
             await this.dao.__acceptAdmin()
 
             const calldata = new ethers.utils.AbiCoder().encode(["string"], ["gang"]);
-
             const txn = await this.dao["propose(address[],uint256[],string[],bytes[],string)"](
                 [this.receiver.address], [value], ["receiveEth(string)"], [calldata], "Send ETH"
             )
@@ -139,6 +138,59 @@ describe("DopeDAO", function () {
 
             // check it executed
             expect((await this.dao.proposals(proposalId)).executed).to.eql(true);
+        })
+
+        it("propose and execute a proposal to set timelock pending admin", async function () {
+            const deployer = this.signers.admin;
+            let now = await hre.waffle.provider.getBlock('latest').then(block => block.timestamp)
+            const eta = now + 11;
+            const sig = "setPendingAdmin(address)"
+            const data = new ethers.utils.AbiCoder().encode(["address"], [this.dao.address]);
+
+            await this.timelock.queueTransaction(this.timelock.address, 0, sig, data, eta);
+
+            await hre.network.provider.request({
+                method: "evm_setNextBlockTimestamp",
+                params: [eta],
+            });
+
+            await this.timelock.executeTransaction(this.timelock.address, 0, sig, data, eta);
+            await this.dao.__acceptAdmin()
+
+            let ABI = ["function setPendingAdmin(address)"];
+            let iface = new ethers.utils.Interface(ABI);
+            const calldata = iface.encodeFunctionData("setPendingAdmin", [deployer.address])
+
+            const txn = await this.dao["propose(address[],uint256[],string[],bytes[],string)"](
+                [this.timelock.address], [0], [""], [calldata], "Set pending admin"
+            )
+
+            const receipt = await txn.wait()
+            const proposalId = receipt.events![0].args!.proposalId
+
+            // check proposal id exists
+            expect((await this.dao.proposals(proposalId)).forVotes.toString()).to.eql("0")
+
+            await hre.network.provider.send("evm_mine");
+
+            await this.dao.castVote(proposalId, 1);
+
+            // check we have voted
+            expect((await this.dao.proposals(proposalId)).forVotes.toString()).to.eql("5")
+
+            await this.dao["queue(uint256)"](proposalId);
+
+            now = await hre.waffle.provider.getBlock('latest').then(block => block.timestamp)
+            await hre.network.provider.request({
+                method: "evm_setNextBlockTimestamp",
+                params: [now + 11],
+            });
+
+            await this.dao["execute(uint256)"](proposalId)
+
+            // check it executed
+            expect((await this.dao.proposals(proposalId)).executed).to.eql(true);
+            expect(await this.timelock.pendingAdmin()).to.eql(deployer.address);
         })
     })
 })
